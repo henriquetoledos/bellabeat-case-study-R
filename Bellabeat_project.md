@@ -64,10 +64,6 @@ Installing the `tidyverse` package to analyze the data:
 
 Loading the `tidyverse` package:
 
-``` r
-library(tidyverse)
-```
-
     ## -- Attaching packages --------------------------------------- tidyverse 1.3.1 --
 
     ## v ggplot2 3.3.5     v purrr   0.3.4
@@ -171,3 +167,9 @@ weight_info <- read_csv("Fitabase Data 4.12.16-5.12.16/weightLogInfo_merged.csv"
     ## 
     ## i Use `spec()` to retrieve the full column specification for this data.
     ## i Specify the column types or set `show_col_types = FALSE` to quiet this message.
+
+``` r
+ggplot(daily_activity, aes(TotalDistance, Calories)) + geom_point()
+```
+
+![](Bellabeat_project_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
