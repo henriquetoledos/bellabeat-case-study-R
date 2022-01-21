@@ -43,7 +43,7 @@ smart devices from other companies, we can draft marketing strategies
 that focus on the most using patterns, common situations, main pain
 points, and so on.
 
-# Data acquisition
+## Data acquisition
 
 First let’s install the necessary packages to work with the datasets:
 
