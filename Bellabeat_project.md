@@ -9,9 +9,19 @@ data from fitness tracker smart devices in order to support the
 marketing strategy of Bellabeat, a high-tech manufacturer of
 health-focused products for women.
 
+**Table of contents**
+
 [Business Task](#business-task)
 
 [Data Acquisition](#data-acquisition)
+
+[Data cleaning](#data-cleaning)
+
+[Data exploration](#data-exploration)
+
+[Data visualization](#data-visualization)
+
+[Key findings & recommendations](#key-findings-and-recommendations)
 
 ## Summary
 
@@ -771,7 +781,7 @@ Only 24 out of 33 (73%) of users used the tracker to sleep. Between
 those 24, they have used 55% of the nights on average, which means that
 the usage of the tracker at sleeping could be improved somehow.
 
-## Key Findings & Recommendations
+## Key Findings and Recommendations
 
 After analyzing the data about Fitbit trackers, let’s summarize the key
 findings and recommendations
