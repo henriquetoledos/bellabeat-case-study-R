@@ -9,6 +9,10 @@ data from fitness tracker smart devices in order to support the
 marketing strategy of Bellabeat, a high-tech manufacturer of
 health-focused products for women.
 
+[Business Task](#business-task)
+
+[Data Acquisition](#data-acquisition)
+
 ## Summary
 
 For this project, I’m playing the role of a junior data analyst working
@@ -23,7 +27,7 @@ device data to gain insight into how consumers are using their smart
 devices. The insights you discover will then help guide marketing
 strategy for the company.
 
-## Business task
+# Business task
 
 Analyze smart device usage public data in order to gain insight into how
 consumers use non-Bellabeat smart devices, in order to drive
@@ -39,7 +43,7 @@ smart devices from other companies, we can draft marketing strategies
 that focus on the most using patterns, common situations, main pain
 points, and so on.
 
-## Data aquisition
+# Data acquisition
 
 First let’s install the necessary packages to work with the datasets:
 
