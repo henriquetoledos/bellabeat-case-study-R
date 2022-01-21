@@ -2,68 +2,383 @@
 title: "Bellabeat Case Study with R"
 author: "Henrique Almeida"
 date: "13/01/2022"
-output: html_document
+output: github_document
 ---
 
-This project has been done as a capstone project for the Google Data Analytics course, completed by me at Coursera platform. The goal is to analyze a public data from fitness tracker smart devices in order to support the marketing strategy of Bellabeat, a high-tech manufacturer of health-focused products for women.
+This project has been done as a capstone project for the Google Data Analytics course, completed at Coursera. The goal is to analyze a public data from fitness tracker smart devices in order to support the marketing strategy of Bellabeat, a high-tech manufacturer of health-focused products for women.
 
-## Scenario
-For this project, I'm playing the role of a junior data analyst working on the marketing analyst team at Bellabeat, a high-tech manufacturer of health-focused products for women. Bellabeat is a successful small company, but they have the potential to become a larger player in theglobal smart device market. Urška Sršen, cofounder and Chief Creative Officer of Bellabeat, believes that analyzing smart device fitness data could help unlock new growth opportunities for the company. You have been asked to focus on one of Bellabeat’s products and analyze smart device data to gain insight into how consumers are using their smart devices. The insights you discover will then help guide marketing strategy for the company.
+## Summary
+For this project, I'm playing the role of a junior data analyst working on the marketing analyst team at Bellabeat, a high-tech manufacturer of health-focused products for women. Bellabeat is a successful small company, but they have the potential to become a larger player in the global smart device market. Urška Sršen, cofounder and Chief Creative Officer of Bellabeat, believes that analyzing smart device fitness data could help unlock new growth opportunities for the company. You have been asked to focus on one of Bellabeat’s products and analyze smart device data to gain insight into how consumers are using their smart devices. The insights you discover will then help guide marketing strategy for the company.
 
+## Business task
 
-## Phase 1: Ask
-
-Sršen asks you to analyze smart device usage data in order to gain insight into how consumers use non-Bellabeat smart devices. She then wants you to select one Bellabeat product to apply these insights to in your presentation. These questions
-will guide the analysis:
+ Analyze smart device usage public data in order to gain insight into how consumers use non-Bellabeat smart devices, in order to drive recommendations to support Bellabeat’s marketing strategy.
+ Some guiding questions:
 
 1. What are some trends in smart device usage?
 2. How could these trends apply to Bellabeat customers?
 3. How could these trends help influence Bellabeat marketing strategy?
 
-To better structure the analysis, I'll be answering to some questions.
+If we can understand how the target audience uses health trackers and smart devices from other companies, we can draft marketing strategies that focus on the most using patterns, common situations, main pain points, and so on.
 
-What is the problem you are trying to solve?
+## Data aquisition
 
-- Gain insights on non-Bellabeat smart device’s usage through data analysis in order to drive recommendations to support Bellabeat’s marketing strategy.
+First let's install the necessary packages to work with the datasets:
 
-How can your insights drive business decisions?
+```{r eval=FALSE, include=FALSE}
+install.packages("tidyverse")
+install.packages("lubridate")
+install.packages("skimr")
+install.packages("patchwork")
+```
 
-- If we can understand how the target audience uses health trackers and smart devices from other companies, we can draft marketing strategies that focus on the most using patterns, common situations, main pain points, and so on.
-
-## Phase 2: Prepare
-
-
-The data contains info about:
-
-- Activity
-- Calories
-- Intensities
-- Steps
-- Sleep pattern
-- weight 
-
-
-Installing the `tidyverse` package to analyze the data:
-
- ```{r}
- install.packages("tidyverse")
- ```
-
-Loading the `tidyverse` package:
+Loading the packages:
 ```{r}
 library(tidyverse)
+library(lubridate)
+library(skimr)
+library(ggcorrplot)
+library(patchwork)
 ```
 
-Loading the data: 
+For this project, I'm using Fitbit Fitness Tracker data, available at https://www.kaggle.com/arashnic/fitbit . Loading the data:
+
 ```{r}
 daily_activity <- read_csv("Fitabase Data 4.12.16-5.12.16/dailyActivity_merged.csv")
-daily_calories <- read_csv("Fitabase Data 4.12.16-5.12.16/dailyCalories_merged.csv")
-daily_intensities <- read_csv("Fitabase Data 4.12.16-5.12.16/dailyIntensities_merged.csv")
-daily_steps <- read_csv("Fitabase Data 4.12.16-5.12.16/dailySteps_merged.csv")
+hourly_calories <- read_csv("Fitabase Data 4.12.16-5.12.16/hourlyCalories_merged.csv")
+hourly_intensities <- read_csv("Fitabase Data 4.12.16-5.12.16/hourlyIntensities_merged.csv")
 sleep_day <- read_csv("Fitabase Data 4.12.16-5.12.16/sleepDay_merged.csv")
 weight_info <- read_csv("Fitabase Data 4.12.16-5.12.16/weightLogInfo_merged.csv")
+```
+
+## Data Cleaning
+
+Let's take a look at the data first:
+```{r}
+glimpse(daily_activity)
+glimpse(sleep_day)
+glimpse(hourly_calories)
+glimpse(hourly_intensities)
+glimpse(weight_info)
+```
+
+We can see that all dates columns were imported as characters, so we need to fix the formatting:
+
+```{r}
+# daily activity
+daily_activity$date <- as.Date(daily_activity$ActivityDate, format = "%m/%d/%Y")
+
+
+# sleep day
+sleep_day$date <- as.Date(sleep_day$SleepDay, format = "%m/%d/%Y")
+
+#hourly intensities
+hourly_intensities$ActivityHour=as.POSIXct(hourly_intensities$ActivityHour, format="%m/%d/%Y %I:%M:%S %p", tz=Sys.timezone())
+
+#hourly calories
+hourly_calories$ActivityHour=as.POSIXct(hourly_calories$ActivityHour, format="%m/%d/%Y %I:%M:%S %p", tz=Sys.timezone())
 
 ```
 
 
+### Checcking for Duplicates
 
+Let's check if the data sets contain any duplicate rows:
+
+```{r}
+nrow(distinct(daily_activity))
+nrow(distinct(sleep_day))
+nrow(distinct(hourly_calories))
+nrow(distinct(hourly_intensities))
+nrow(distinct(weight_info))
+```
+We can see that sleep day have 410 distinct rows, while the dataset shows 413 observations. Let's remove the duplicates:
+
+```{r}
+sleep_day <- distinct(sleep_day)
+```
+
+### Checking missing values
+
+```{r}
+sum(is.na(daily_activity))
+sum(is.na(sleep_day))
+sum(is.na(hourly_calories))
+sum(is.na(hourly_intensities))
+sum(is.na(weight_info))
+```
+We see that weight_info has 65 missing values. Investigating the dataset, we see that there is missing information about Fat percentages, so this information will not be used in the analysis.
+
+## Data exploration
+
+Let's first get some summary statistics about the data, and see if we can get any insights from it.
+
+```{r}
+
+# activity
+daily_activity %>%  
+  select(TotalSteps,
+         TotalDistance,
+         Calories) %>%
+  summary()
+
+# explore num of active minutes per category
+daily_activity %>%
+  select(VeryActiveMinutes,
+         FairlyActiveMinutes,
+         LightlyActiveMinutes,
+         SedentaryMinutes) %>%
+  summary()
+
+# intensities
+hourly_intensities %>% 
+  select(TotalIntensity, AverageIntensity) %>% 
+  summary()
+
+# calories
+hourly_calories %>%
+  select(Calories) %>%
+  summary()
+# sleep
+sleep_day %>%
+  select(TotalSleepRecords, TotalMinutesAsleep, TotalTimeInBed) %>%
+  summary()
+# weight
+weight_info %>%
+  select(WeightKg, BMI) %>%
+  summary()
+```
+Some first insights about the data:
+
+- The average nº of steps per day is 7638, which is 24% below the 10,000 steps recommended. (For general fitness, most adults should aim for 10,000 steps per day. This figure may rise or fall depending on a person's age, current fitness level, and health goals. This recommendation comes from the Centers for Disease Control and Prevention (CDC) )
+- The average sedentary time per day is 16h30 min, which can mean 2 things: the users are very sedentary people, or the threshold of sedentary activity on the smart devices do not represent reality and could be better calibrated
+- The average time asleep is 6h50min, and total time in bed 7h40 min. If we consider 8h of sleep per day as recommendation, we see that the user are not sleeping as much as they should. We can try to understand what factors can influence the time asleep, and possibly the sleep quality.
+
+Now let's see the number of different participants in each data sets.
+
+```{r}
+n_distinct(daily_activity$Id)
+n_distinct(sleep_day$Id)
+n_distinct(hourly_calories$Id)
+n_distinct(hourly_intensities$Id)
+n_distinct(weight_info$Id)
+```
+There are 33 users for the daily activity and hourly calories & intensities, and only 24 for sleep and 8 for weight. 
+
+In order to better prepare the data for analysis, we will add more columns :
+
+- Adding "weekday" to look for patterns along the week
+- Adding "time" to `hourly_intensities` and `hourly_calories` to separate the hours from datetime
+- Adding "activeness" column to `daily_activity` based on the nº of steps taken that day. The activeness levels were determined based on https://www.medicinenet.com/how_many_steps_a_day_is_considered_active/article.htm.
+- Adding "sleepness" to `sleep_day` to classify sleep time.
+
+```{r}
+
+hourly_intensities <- hourly_intensities %>% 
+  mutate(weekday = weekdays(ActivityHour)) %>% 
+  mutate(time = format(ActivityHour, format = "%H:%M:%M"))
+
+hourly_calories <- hourly_calories %>% 
+  mutate(weekday = weekdays(ActivityHour)) %>% 
+  mutate(time = format(ActivityHour, format = "%H:%M:%M"))
+
+
+
+daily_activity <- daily_activity %>% 
+  mutate(weekday = weekdays(date))
+
+
+daily_activity <- daily_activity %>% 
+  mutate(Activeness = case_when(.$TotalSteps < 5000 ~ "Sedentary",
+                                .$TotalSteps < 7499 ~ "Low Active",
+                                .$TotalSteps < 9999 ~ "Somewhat Active",
+                                .$TotalSteps < 12500 ~ "Active",
+                                .$TotalSteps >= 12500 ~ "Highly Active"))
+
+sleep_day <- sleep_day %>%
+  mutate(Sleepiness = case_when(.$TotalMinutesAsleep < 420 ~ "Need More Sleep",
+                                .$TotalMinutesAsleep >= 420 & TotalMinutesAsleep < 540 ~ "Good Sleep",
+                                .$TotalMinutesAsleep >= 540 ~ "Too Much Sleep"))
+```
+
+### Merging the data
+
+We will merge the data of daily activity and sleep, and see if they represent data about the same users.
+
+```{r}
+merged_data <- inner_join(sleep_day, daily_activity, by=c('Id', 'date'))
+glimpse(merged_data)
+```
+
+Now let's see the distinct Id's:
+```{r}
+n_distinct(merged_data$Id)
+```
+There are 24 unique users, so we have data about daily activity and sleep of those 24 users!
+
+We will ad more columns to the merged data set in order to better analyze the information:
+
+
+```{r}
+
+```
+
+
+## Data Visualization
+
+Let's start to see the data in charts to better understand it.
+
+We will first analyze the correlation between the variables in the merged data with the `ggcorrplot` package.
+
+```{r}
+cor1 <- merged_data %>%
+  summarise(
+         TotalMinutesAsleep,
+         Calories,
+         TotalDistance,
+         TotalSteps,
+         LightlyActiveMinutes,
+         FairlyActiveMinutes,
+         VeryActiveMinutes,
+         Active_Minutes = LightlyActiveMinutes + FairlyActiveMinutes + VeryActiveMinutes,
+         SedentaryMinutes) %>% 
+  cor()
+
+ggcorrplot(cor1, hc.order = TRUE, type = "lower", lab = TRUE)
+```
+From this analysis, we can take some conclusions:
+
+- The total distance is very positive correlated to total steps, which was already expected
+- The lightly active minutes make the most part of the active minutes taken by people
+- the only variable that significantly correlates to the total minutes asleep is sedentary minutes, with a negative correlation
+
+Let's investigate better the correlation between sedentary minutes and minutes asleep.
+
+```{r}
+ggplot(data = merged_data, aes(x = SedentaryMinutes, y = TotalMinutesAsleep)) + geom_point() + geom_smooth(method = "loess") + labs(title = "Total Sedentary Minutes vs Total minutes asleep")
+```
+We can see that there is a negative correlation between total sedentary minutes and total minutes asleep. That is, the more sedentary people are, the less is the quality of their sleep!
+
+Let's now check the relationship between Steps taken and calories burned.
+
+```{r}
+ggplot(merged_data, mapping = aes(x = Calories, y = TotalSteps, color = Calories)) +
+  geom_point() +
+  geom_smooth(method = "loess") +
+  labs(title = "Total Steps vs Calories Burn", x = "Calories Burn") +
+  scale_color_gradient(low = "#501e7d", high = "#fd8f76")
+```
+
+Let's see how active people are based on our classification.
+
+```{r}
+daily_activity %>% 
+  group_by(Activeness) %>% 
+  summarise (total_active = n()) %>% 
+  mutate (totals_active = sum(total_active)) %>% 
+  group_by(Activeness) %>% 
+  summarise (TotalPercent_active = total_active / totals_active*100)
+
+#Sort Activeness levels
+daily_activity$Activeness <- factor(daily_activity$Activeness, levels = c("Sedentary", "Low Active", "Somewhat Active", "Active", "Highly Active"))
+
+# Data Visualization
+ggplot(data=daily_activity)+geom_bar(mapping=aes(x=Activeness, fill=Activeness)) +
+   labs(title = "Count of Activity Levels",
+       y = "Number of Days")
+```
+Now let's check at what time of the day people are most active:
+```{r}
+intensity_analysis <- hourly_intensities %>% 
+  group_by(time) %>% 
+  summarise(Intensity = mean(TotalIntensity))
+
+calories_analysis <- hourly_calories %>% 
+  group_by(time) %>% 
+  summarise(Cal = mean(Calories))
+
+p1 <- ggplot(data = intensity_analysis, aes(x = time, y = Intensity)) +
+  geom_histogram(stat = "identity", fill='darkblue') +
+  theme(axis.text.x = element_text(angle = 90)) +
+  labs(title="Average Total Intensity vs. Time")
+
+p2 <- ggplot(data = calories_analysis, aes(x = time, y = Cal)) + geom_histogram(stat = "identity") +   theme(axis.text.x = element_text(angle = 90))
+
+
+p1+p2
+```
+Users are more active between 5:00 to 22:00, with the highest activity between 17:00 to 19:00.
+
+```{r}
+intensity_weekday_analysis <- hourly_intensities %>% 
+  group_by(weekday) %>% 
+  summarise(Intensity = mean(TotalIntensity))
+
+intensity_weekday_analysis$weekday <- ordered(intensity_weekday_analysis$weekday, levels = c("segunda-feira", "terça-feira", "quarta-feira", "quinta-feira", "sexta-feira", "sábado", "domingo"))
+  
+
+ggplot(data = intensity_weekday_analysis, aes(x = weekday, y = Intensity, fill = weekday)) + geom_histogram(stat = "identity")+   theme(axis.text.x = element_text(angle = 90)) +
+  labs(title="Average Total Intensity vs. Time")
+
+steps_weekday_analysis <- merged_data %>% 
+  group_by(weekday) %>% 
+  summarise(Steps = mean(TotalSteps))
+
+steps_weekday_analysis$weekday <- ordered(steps_weekday_analysis$weekday, levels = c("segunda-feira", "terça-feira", "quarta-feira", "quinta-feira", "sexta-feira", "sábado", "domingo"))
+
+ggplot(data = steps_weekday_analysis, aes(x = weekday, y = Steps, fill = weekday)) + geom_histogram(stat = "identity")+   theme(axis.text.x = element_text(angle = 90)) +
+  labs(title="Average Steps vs. Time")
+```
+
+Checking which tipe of user sleeps better
+
+```{r}
+#Sort Sleepiness levels
+merged_data$Sleepiness <- factor(merged_data$Sleepiness, levels = c("Need More Sleep", "Good Sleep", "Too Much Sleep"))
+
+#Summary Percent Participant, and Visualize it
+merged_data %>% 
+  group_by(Sleepiness) %>% 
+  summarise (total = n()) %>% 
+  mutate (totals = sum(total)) %>% 
+  group_by(Sleepiness) %>% 
+  summarise (TotalPercent = total / totals*100) %>%
+  ggplot(aes(x=Sleepiness, y=TotalPercent, fill = Sleepiness)) + 
+  geom_bar(stat='identity') + 
+  geom_text(aes(label=round(TotalPercent, digits = 0)), vjust=-0.3, size=3.5) +
+  labs(title= "Participants Ideal Sleeping Time", y= "Percentages (%)")
+```
+we can see that 46% of the users are having a good time of sleep. 
+
+Let's see how users use the trackers to monitor sleep:
+
+```{r}
+
+sleep_analysis <- merged_data %>% 
+  group_by(Id) %>% 
+  summarize(
+    Count = n(),
+    avg = Count/31)
+
+avg_days_used = mean(sleep_analysis$avg)
+
+avg_days_used
+```
+Only 24 out of 33 (73%) of users used the tracker to sleep. Between those 24, they have used 55% of the nights on average, which means that the usage of the tracker at sleeping could be improved somehow.
+
+## Key Findings & Recommendations
+
+After analyzing the data about Fitbit trackers, let's summarize the key findings and recommendations
+
+- Users take 7638 steps per day on average, which is lower than the recommended by Health Organizations
+- Fitbit users are very sedentary, or trackers may not be well calibrated for computing sedentary minutes, because the average sedentary time per day is 16h30min
+- There is a negative correlation between sedentary time and minutes asleep, which indicates that the more sedentary we are, the less we sleep
+- Users tend to be more active between 5:00 to 22:00, with the greatest activity between 17:00 to 19:00, which is probably the time people leave work and go exercise
+
+My recommendations to Bellabeat marketing strategy are the following:
+
+- Bellabeat should make sure their devices tracks "sedentary activity" correctly, and use it as a benefit of their products in comparison with Fitbit
+- We found out that only 46% users have a good sleep i.e 7-9 hours. Bellabeat could develop alarms and notification to incentivise users to go to bed on time, and avoid oversleeping.
+- Bellabeat could implement daily goals for steps taken, which could increase overall fitness of users
+
+Thanks!
