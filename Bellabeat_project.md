@@ -11,17 +11,12 @@ health-focused products for women.
 
 **Table of contents**
 
-[Business Task](#business-task)
-
-[Data Acquisition](#data-acquisition)
-
-[Data cleaning](#data-cleaning)
-
-[Data exploration](#data-exploration)
-
-[Data visualization](#data-visualization)
-
-[Key findings & recommendations](#key-findings-and-recommendations)
+- [Business Task](#business-task)
+- [Data acquisition](#data-acquisition)
+- [Data cleaning](#data-cleaning)
+- [Data exploration](#data-exploration)
+- [Data visualization](#data-visualization)
+- [Key findings & recommendations](#key-findings-and-recommendations)
 
 ## Summary
 
